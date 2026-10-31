@@ -106,13 +106,11 @@ class ValueIterationAgent(ValueEstimationAgent):
             #replace old values only after finishing the entire round 
             self.values = newValues
 
-
     def getValue(self, state):
         """
           Return the value of the state (computed in __init__).
         """
         return self.values[state]
-
 
     def computeQValueFromValues(self, state, action):
         """
@@ -219,6 +217,34 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+    
+        #gets and stores the list of states 
+        states = self.mdp.getStates()
+
+        #repeats for the requested number of iterations 
+        for iteration in range(self.iterations):
+
+            #chooses a single state to update by doing iteration num % length of list 
+            state = states[iteration % len(states)]
+
+            #check if the state is terminal & skip 
+            if self.mdp.isTerminal(state):
+                continue
+            else:
+                actions = self.mdp.getPossibleActions(state)
+                highestQVal = float('-inf')
+
+                #compare q-values for this state's actions 
+                for action in actions: 
+                    qVal = self.computeQValueFromValues(state, action)
+
+                    #compare returned qVal numbers and save the highest one 
+                    if(qVal > highestQVal):
+                        highestQVal = qVal
+
+                #update directly to state; save the highest q-value after checking all actions 
+                self.values[state] = highestQVal
+
 
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     """
