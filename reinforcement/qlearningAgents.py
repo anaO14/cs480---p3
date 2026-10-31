@@ -50,9 +50,6 @@ class QLearningAgent(ReinforcementAgent):
         '''
         self.qvalues = {}
 
-
-
-
     def getQValue(self, state, action):
         """
           Returns Q(state,action)
@@ -66,7 +63,6 @@ class QLearningAgent(ReinforcementAgent):
 
 
         #util.raiseNotDefined()
-
 
     def computeValueFromQValues(self, state):
         """
@@ -136,7 +132,7 @@ class QLearningAgent(ReinforcementAgent):
             elif qvalue == max_value:
 
                 best_action.append(i)
-                
+
         #if tie choose randomly against choices 
         answer = random.choice(best_action) 
 
@@ -180,7 +176,6 @@ class QLearningAgent(ReinforcementAgent):
         return agent_pick
         
         #util.raiseNotDefined()
-
 
     def update(self, state, action, nextState, reward):
         """
