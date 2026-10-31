@@ -59,9 +59,52 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.values = util.Counter() # A Counter is a dict with default 0
         self.runValueIteration()
 
+    """
+    This method updates the value for every state (box in the grid), one round at a time. 
+    The agent does not move.
+    For each box, it compares the Q-values of the avilable actions and stores the highest one as that box's new value. 
+    One round means updating all states using the previous round's values. 
+
+    immediate reward + discount x stored value of next state 
+    """
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        #state = self.mdp.getStates()
+        #transition = self.mdp.getTransitionStatesAndProbs(state, action)
+        #oldValue = self.values[n]
+        #immediateReward = transition + self.discount
+
+        newValues = 0
+
+        for iteration in range(self.iterations):
+            newValues = util.Counter()
+
+            #loop through all the states 
+            for state in self.mdp.getStates():
+
+                #get actions from each states & loop through actions
+                actions = self.mdp.getPossibleActions(state)
+
+                if not actions:
+                    newValues[state] = 0 
+                    continue
+
+                highestQVal = float('-inf')
+
+                #compare q-values for this state's actions 
+                for action in actions: 
+                    qVal = self.computeQValueFromValues(state, action)
+
+                    #compare returned qVal numbers and save the highest one 
+                    if(qVal > highestQVal):
+                        highestQVal = qVal
+
+                #save the highest q-value after checking all actions 
+                newValues[state] = highestQVal
+
+            #replace old values only after finishing the entire round 
+            self.values = newValues
 
 
     def getValue(self, state):
@@ -75,8 +118,32 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
           Compute the Q-value of action in state from the
           value function stored in self.values.
+
+          probability: how likely an outcome is 
+          reward is something you get immediately
+          value estimates what you can earn starting from a state over time
+
+          ex: 
+          possible next state       probability        stored value 
+          box a                    0.8(80% change)          5
+          box b                    0.2(20% change)         -2
         """
         "*** YOUR CODE HERE ***"
+
+        qVal = 0
+
+        for nextState, probability in self.mdp.getTransitionStatesAndProbs(state, action):
+
+            #points recieved immediately for a particular transition 
+            reward = self.mdp.getReward(state, action, nextState)
+
+            #the value stored for the next possible state 
+            nextValue = self.values[nextState]
+
+            #expected total of immediate and discounted future rewards starting from a state 
+            qVal += probability * (reward + self.discount * nextValue)
+
+        return qVal
         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
@@ -89,6 +156,34 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
+
+        highestQVal = float('-inf')
+        newValues = util.Counter()
+        bestAction = None
+        
+        actions = self.mdp.getPossibleActions(state)
+
+        if not actions:
+            return None
+
+        for action in actions: 
+            qVal = self.computeQValueFromValues(state, action)
+
+            #compare returned qVal numbers and save the highest one 
+            if(qVal > highestQVal):
+                highestQVal = qVal
+                bestAction = action
+
+            #save the highest q-value after checking all actions 
+            newValues[state] = highestQVal
+
+        return bestAction
+
+
+
+
+
+
         util.raiseNotDefined()
 
     def getPolicy(self, state):
