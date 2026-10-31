@@ -178,12 +178,6 @@ class ValueIterationAgent(ValueEstimationAgent):
             newValues[state] = highestQVal
 
         return bestAction
-
-
-
-
-
-
         util.raiseNotDefined()
 
     def getPolicy(self, state):
