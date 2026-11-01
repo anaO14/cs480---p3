@@ -217,7 +217,7 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
-    
+
         #gets and stores the list of states 
         states = self.mdp.getStates()
 
@@ -245,7 +245,6 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
                 #update directly to state; save the highest q-value after checking all actions 
                 self.values[state] = highestQVal
 
-
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     """
         * Please read learningAgents.py before reading this.*
@@ -263,6 +262,77 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         self.theta = theta
         ValueIterationAgent.__init__(self, mdp, discount, iterations)
 
+    """
+    This method updates the states based on priority. 
+    Compares a state's stored value with what its value would be if updated now:
+        diff = [highestQvalue - stored state val]
+    """
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
 
+        priorityQueue = util.PriorityQueue()
+        diff = 0
+    
+        #gets and stores the list of states 
+        states = self.mdp.getStates()
+
+        #find predecessors by checking which states can lead to each next state
+        predecessors = {state: set() for state in states}
+        for state in states:
+            #compare q-values for this state's actions 
+            for action in self.mdp.getPossibleActions(state): 
+                for nextState, probability in self.mdp.getTransitionStatesAndProbs(state, action):
+                    if probability > 0:
+                        predecessors[nextState].add(state)
+
+
+        for state in states:
+            #check if the state is terminal & skip 
+            if self.mdp.isTerminal(state):
+                continue
+            else:
+                actions = self.mdp.getPossibleActions(state)
+                highestQVal = float('-inf')
+
+                #compare q-values for this state's actions 
+                for action in actions: 
+                    qVal = self.computeQValueFromValues(state, action)
+
+                    #compare returned qVal numbers and save the highest one 
+                    if(qVal > highestQVal):
+                        highestQVal = qVal
+
+                    #calculate the difference between stored value and highest q value
+                    diff = abs(self.values[state] - highestQVal)
+                    priorityQueue.push(state, -diff)
+
+        for iteration in range(self.iterations): 
+            if priorityQueue.isEmpty():
+                break
+
+            state = priorityQueue.pop()
+
+            if not self.mdp.isTerminal(state):
+                highestQVal = float('-inf')
+            
+                for action in self.mdp.getPossibleActions(state):
+                    qVal = self.computeQValueFromValues(state, action)
+                    highestQVal = max(highestQVal, qVal)
+            
+                self.values[state] = highestQVal
+            
+            #check if predecessors need future updates 
+            for p in predecessors[state]:
+                if self.mdp.isTerminal(p):
+                    continue
+                
+                highestQVal = float('-inf')
+
+                for action in self.mdp.getPossibleActions(p):
+                    qVal = self.computeQValueFromValues(p, action)
+                    highestQVal = max(highestQVal, qVal)
+
+                diff = abs(self.values[p] - highestQVal)
+
+                if diff > self.theta:
+                    priorityQueue.update(p, -diff)
